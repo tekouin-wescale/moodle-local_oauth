@@ -1,54 +1,96 @@
-# OAuth2 Server Plugin for Moodle
+# moodle-local_oauth
 
-It provides an [OAuth2](https://tools.ietf.org/html/rfc6749 "RFC6749") server so that a user can use its Moodle account to log in to your application.
-Oauth2 Library has been taken from https://github.com/bshaffer/oauth2-server-php
+Campusna-maintained Moodle plugin that turns Moodle into an **OAuth2 provider**, so external apps can let users sign in with their Moodle account.
+
+| Field | Value |
+| --- | --- |
+| Component | `local_oauth` |
+| Install path | `moodle/local/oauth` |
+| Org | `tekouin-wescale` |
+| Status | **maintained** (Campusna / Jupiter Moodle) |
+| Upstream | Fork of [`projectestac/moodle-local_oauth`](https://github.com/projectestac/moodle-local_oauth) (lineage from cognitivabrasil / Estac) |
+
+## Why this fork exists
+
+The original public plugin is no longer a reliable source of truth for current Moodle. Campusna keeps this fork updated for production Moodle (including work tested against **Moodle 4.5.1 / Jupiter**). Prefer this repository over abandoned clones when deploying for Campusna.
+
+OAuth2 library: [bshaffer/oauth2-server-php](https://github.com/bshaffer/oauth2-server-php).
 
 ## Requirements
-* #### Moodle 2.8 o higher installed
-* #### Admin account
 
-## Instalation steps
-1. Clone this repository in a directory named "oauth".  `$ git clone https://github.com/cognitivabrasil/moodle-local_oauth.git oauth`
+- Moodle 2.8 or higher (Campusna target: Moodle 4.5.x)
+- Moodle admin account for install and client registration
 
-2. Compress it to a _.zip_ file.
+## Installation
 
-3. Log in to Moodle as an administrator.
+1. Clone into Moodle as `local/oauth`:
 
-4. Search a block named _Administration_ and look for _Site Administration > Plugins > Install Plugins_.
+```bash
+cd /path/to/moodle/local
+git clone https://github.com/tekouin-wescale/moodle-local_oauth.git oauth
+```
 
-5. Choose the _.zip_ file and hit the button _Install Plugin from the ZIP file_.
+2. Or install via Site administration > Plugins > Install plugins (zip of a folder named `oauth`).
 
-6. Make sure the directory *path_to_moodle/local/* has writing permissions for moodle. If the validation is ok, install it.
+3. Complete the Moodle upgrade / plugin install prompts.
 
-7. Go to *Site Administration > Server > OAuth provider settings*
+4. Ensure `moodle/local/` is writable during install if Moodle copies files itself.
 
-8. Click *Add new client*
+5. Go to **Site administration > Server > OAuth provider settings**.
 
-9. Fill in the form. Your Client Identifier and Client Secret (which will be given later) will be used for you to authenticate. The Redirect URL must be the URL mapping to your client that will be used.
+6. **Add new client**, set Client Identifier, redirect URL, then note the Client Secret.
 
-## How to use 
+## How to use
 
-1. From your application, redirect the user to this URL: `http://moodledomain.com/local/oauth/login.php?client_id=EXAMPLE&response_type=code` *(remember to replace the URL domain with the domain of Moodle and replace EXAMPLE with the Client Identifier given in the form.)*
+1. Redirect the user to:
 
-2. The user must log in to Moodle and authorize your application to use its basic info.
+`https://moodledomain.com/local/oauth/login.php?client_id=EXAMPLE&response_type=code`
 
-3. If it went all ok, the plugin should redirect the user to something like: `http://yourapplicationdomain.com/foo?code=55c057549f29c428066cbbd67ca6b17099cb1a9e` *(that's a GET request to the Redirect URL given with the code parameter)*
+Replace domain and `EXAMPLE` with your Client Identifier.
 
-4. Using the code given, your application must send a POST request to `http://moodledomain.com/local/oauth/token.php`  having the following parameters: `{'code': '55c057549f29c428066cbbd67ca6b17099cb1a9e', 'client_id': 'EXAMPLE', 'client_secret': 'codeGivenAfterTheFormWasFilled', 'grant_type': 'authorization_code',   'scope': 'user_info'}`. 
+2. User logs in to Moodle and authorizes the application.
 
-5. If the correct credentials were given, the response should a JSON be like this: `{"access_token":"79d687a0ea4910c6662b2e38116528fdcd65f0d1","expires_in":3600,"token_type":"Bearer","scope":"user_info","refresh_token":"c1de730eef1b2072b48799000ec7cde4ea6d2af0"}`
+3. Moodle redirects to your Redirect URL with a `code` query parameter.
 
-6. Finally, send a POST request to `http://moodledomain.com/local/oauth/user_info.php` passing the access token as a parameter, like: `{'access_token':'79d687a0ea4910c6662b2e38116528fdcd65f0d1'}`. 
+4. Exchange the code with a POST to `https://moodledomain.com/local/oauth/token.php`:
 
-7. If the token given is valid, a JSON containing the user information is returned. Ex: `{"id":"22","username":"foobar","idnumber":"","firstname":"Foo","lastname":"Bar","email":"foo@bar.com","lang":"en","phone1":"5551619192"}`
+```text
+code, client_id, client_secret, grant_type=authorization_code, scope=user_info
+```
 
+Successful response (example):
 
+```json
+{
+  "access_token": "...",
+  "expires_in": 3600,
+  "token_type": "Bearer",
+  "scope": "user_info",
+  "refresh_token": "..."
+}
+```
 
-**This plugin has been tested on Moodle 2.8 and Moodle 3.0**
+5. Fetch profile with a POST to `https://moodledomain.com/local/oauth/user_info.php` using `access_token`.
 
+Example response:
+
+```json
+{
+  "id": "22",
+  "username": "foobar",
+  "firstname": "Foo",
+  "lastname": "Bar",
+  "email": "foo@bar.com",
+  "lang": "en"
+}
+```
+
+## Maintenance notes
+
+- This repo is the Campusna-supported copy for Tekouin / Jupiter Moodle SSO-style integrations.
+- Report issues and send PRs here (`tekouin-wescale/moodle-local_oauth`), not to abandoned upstream mirrors.
+- Historical testing mentioned Moodle 2.8 / 3.0; Campusna has since applied updates for Moodle 4.5.1.
 
 ## Contributors
-Apart from people in this repository, also have contributed:
 
-- [igorpf] (https://github.com/igorpf)
-
+Historical upstream contributors (non-exhaustive): people on the original repositories, including [igorpf](https://github.com/igorpf). Campusna maintainers continue updates in this org.
