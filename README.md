@@ -8,7 +8,9 @@ Campusna-maintained Moodle plugin that turns Moodle into an **OAuth2 provider**,
 | Install path | `moodle/local/oauth` |
 | Org | `tekouin-wescale` |
 | Status | **maintained** (Campusna / Jupiter Moodle) |
+| Role | Public Moodle plugin fork (OAuth2 provider) |
 | Upstream | Fork of [`projectestac/moodle-local_oauth`](https://github.com/projectestac/moodle-local_oauth) (lineage from cognitivabrasil / Estac) |
+| Docs | keep README as primary install guide |
 
 ## Why this fork exists
 
